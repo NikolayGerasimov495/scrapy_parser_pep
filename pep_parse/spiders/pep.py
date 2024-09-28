@@ -19,16 +19,15 @@ class PepSpider(scrapy.Spider):
 
     def parse_pep(self, response):
         title = response.css('h1.page-title::text').get()
-        if title:
-            title_parts = title.split(' – ')
-            if len(title_parts) == 2:
-                number, name = title_parts[0].strip(), title_parts[1].strip()
-            else:
-                self.logger.warning(
-                    f"Не удалось распарсить заголовок: {title}")
-                return
-
-            status = response.css(PEP_STATUS_SELECTOR).get()
-            yield PepParseItem(number=number, name=name, status=status)
-        else:
+        if not title:
             self.logger.warning("Не найден заголовок страницы PEP.")
+            return
+
+        title_parts = title.split(' – ')
+        if len(title_parts) != 2:
+            self.logger.warning(f"Не удалось распарсить заголовок: {title}")
+            return
+
+        number, name = title_parts[0].strip(), title_parts[1].strip()
+        status = response.css(PEP_STATUS_SELECTOR).get()
+        yield PepParseItem(number=number, name=name, status=status)
